@@ -1,0 +1,634 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.message.text }}",
+        "options": {
+          "systemMessage": "Tu es l'assistant de Génération Prospect, agence d'activités à\nBali.\n\nIMPORTANT : Utilise TOUJOURS l'outil \"base_de_connaissance\" pour rechercher des informations sur les activités, prix, et politiques avant de répondre.\n\nTon rôle :\n-Présenter nos activités avec les prix exacts de la base de\ndonnées\n- ﻿﻿Prendre les informations du prospects\n- ﻿﻿Informer sur les disponibilités\n- ﻿﻿Aider à la réservation\n- ﻿﻿Donner des conseils personnalisés\n\nProcessus :\n1. ﻿﻿﻿Utilise l'outil knowledge_base pour chercher les informations\n2. ﻿﻿﻿Base-toi UNIQUEMENT sur ces données pour répondre\n3. ﻿﻿﻿Sois chaleureux et professionnel\n\nQuand un client fournit ses informations personnelles (nom, email, téléphone), tu dois :\n\n1. ﻿﻿﻿Extraire ces informations de la conversation\n2. ﻿﻿﻿Utiliser l'outil gerer_clients avec ce format exact :\n- ﻿﻿name: [nom du client]\n- ﻿﻿email: [l'email du client]\n- ﻿phone: [téléphone du client]\n- ﻿﻿activity: [activité souhaitée]\n- ﻿﻿date: [date actuelle]\n\nAssure-toi de demander ces informations si elles manquent avant de faire la réservation.\n\nCommence par : \"Bonjour ! Quelle activité a Bali vous intéresse ?"
+        }
+      },
+      "id": "0cd5019a-7622-42fb-9ff6-d21952672234",
+      "name": "AI Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        224,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "model": "openai/gpt-oss-120b",
+        "options": {}
+      },
+      "id": "d5f8832f-3b08-4cde-9161-09d702aed15c",
+      "name": "Groq Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        96,
+        208
+      ],
+      "credentials": {
+        "groqApi": {
+          "id": "MBovOZMr8aS7zGQ0",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $json.message.from.id }}",
+        "contextWindowLength": 3
+      },
+      "id": "7c0df33b-f926-4040-ad7b-acece7f92dd7",
+      "name": "Simple Memory",
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.4,
+      "position": [
+        240,
+        208
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolDescription": "Appel cet outil à chaque question",
+        "memoryKey": {
+          "__rl": true,
+          "value": "bali_activities_db",
+          "mode": "list",
+          "cachedResultName": "bali_activities_db"
+        }
+      },
+      "id": "87ac0ce8-88fd-4b0c-beb0-b81a267f407e",
+      "name": "Simple Vector Store1",
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreInMemory",
+      "typeVersion": 1.4,
+      "position": [
+        752,
+        256
+      ]
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-embedding-2"
+      },
+      "id": "71793375-3f0c-4b8b-bda9-1665095ed5c8",
+      "name": "Embeddings Google Gemini1",
+      "type": "@n8n/n8n-nodes-langchain.embeddingsGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        880,
+        416
+      ],
+      "credentials": {
+        "googlePalmApi": {
+          "id": null,
+          "name": "",
+          "__aiGatewayManaged": true
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "6954fdef-f8d7-4241-8140-8e4ac2aa5005",
+      "name": "Tavily MCP",
+      "type": "@n8n/mcp-registry.tavily",
+      "typeVersion": 1.1,
+      "position": [
+        384,
+        272
+      ],
+      "credentials": {
+        "tavilyMcpOAuth2Api": {
+          "id": "U8Ym8Ci6szmzPBjk",
+          "name": "Tavily account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Utilise cet outil pour sauvegarder les informations client. Paramètres requis : name (nom complet), email (adresse email), phone (numéro téléphone), activité (activité souhaitée). Exemple d'utilisation : name = \"Jean Dupont\", email = \"jean@email.com\", phone = \"0123456789\", activité = \"Tour volcal\"",
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1xZB1Git5IESw2N_-JmPVxHDNIgM13p5c_E5eZ1DDV7Q",
+          "mode": "list",
+          "cachedResultName": "BDD agent IA bali",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1xZB1Git5IESw2N_-JmPVxHDNIgM13p5c_E5eZ1DDV7Q/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1xZB1Git5IESw2N_-JmPVxHDNIgM13p5c_E5eZ1DDV7Q/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Date_activité": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Date_activit_', ``, 'string') }}",
+            "Activité_souhaitée": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Activit__souhait_e', ``, 'string') }}",
+            "Téléphone": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('T_l_phone', ``, 'string') }}",
+            "Email": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Email', ``, 'string') }}",
+            "Nom": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Nom', ``, 'string') }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Nom",
+              "displayName": "Nom",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Téléphone",
+              "displayName": "Téléphone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Activité_souhaitée",
+              "displayName": "Activité_souhaitée",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Date_activité",
+              "displayName": "Date_activité",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "1a37ef6f-960a-4143-9978-097ef58e279d",
+      "name": "Append row in sheet in Google Sheets",
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.7,
+      "position": [
+        688,
+        416
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "4e1q2rh62d0ofOmR",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Utilise cet outil pour ajouter la réservation du client dans l'agenda",
+        "calendar": {
+          "__rl": true,
+          "value": "14f54fa6fdc65f08ed9f0d0d71ebb5eb28efc67f65a819e7968c5727babe401d@group.calendar.google.com",
+          "mode": "list",
+          "cachedResultName": "Agenda Bali"
+        },
+        "start": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Start', ``, 'string') }}",
+        "end": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('End', ``, 'string') }}",
+        "additionalFields": {
+          "attendees": [
+            "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('attendees0_Attendees', ``, 'string') }}"
+          ],
+          "description": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Description', ``, 'string') }}",
+          "summary": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Summary', ``, 'string') }}"
+        }
+      },
+      "id": "bcd70384-63bb-40ea-b8de-6a2f30ca4e21",
+      "name": "Create an event in Google Calendar",
+      "type": "n8n-nodes-base.googleCalendarTool",
+      "typeVersion": 1.3,
+      "position": [
+        528,
+        416
+      ],
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "nZpWdtcOKWSYx9J7",
+          "name": "Google Calendar account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Utilise cet outil pour envoyer au client un email de confirmation de sa réservation.",
+        "sendTo": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('To', `Adresse email du client`, 'string') }}",
+        "subject": "Confirmation de votre réservation à Bali ! ",
+        "emailType": "text",
+        "message": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Message', `Rédige un email récapitulatif à l'utilisateur avec toutes les informations de l'activité qu'il a réservé ainsi que l'agence.`, 'string') }}",
+        "options": {}
+      },
+      "id": "1cdfd40a-e190-4198-8b6e-8388e5053d43",
+      "name": "send_confirmation_email",
+      "type": "n8n-nodes-base.gmailTool",
+      "typeVersion": 2.2,
+      "position": [
+        1104,
+        416
+      ],
+      "webhookId": "0151b2f3-f6e4-4f98-8768-f02c2024800a",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "5G4ONUxrLlHhkMJc",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "triggerOn": "specificFolder",
+        "folderToWatch": {
+          "__rl": true,
+          "value": "1pneK-BqjJ-2Cc1LhYyJ-c1w6W5CHmEX4",
+          "mode": "list",
+          "cachedResultName": "n8n_agent",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/1pneK-BqjJ-2Cc1LhYyJ-c1w6W5CHmEX4"
+        },
+        "event": "fileCreated",
+        "options": {}
+      },
+      "id": "b71be5d8-7129-40b8-9d75-28f53b3d2089",
+      "name": "Google Drive Trigger",
+      "type": "n8n-nodes-base.googleDriveTrigger",
+      "typeVersion": 1,
+      "position": [
+        -544,
+        864
+      ],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "Y8vV1Rnonw0Hfd6f",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json.id }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "id": "a692fc8b-e8f9-47ef-8de5-f992fa36641a",
+      "name": "Download file",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -64,
+        864
+      ],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "Y8vV1Rnonw0Hfd6f",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "insert",
+        "memoryKey": {
+          "__rl": true,
+          "mode": "list",
+          "value": "bali_activities_db"
+        },
+        "embeddingBatchSize": 400
+      },
+      "id": "bcf11cf6-4ee0-466e-bf8a-719fefd7afb8",
+      "name": "Simple Vector Store",
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreInMemory",
+      "typeVersion": 1.4,
+      "position": [
+        192,
+        864
+      ]
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-embedding-2"
+      },
+      "id": "247bb208-8246-4ace-8c5d-e4d8a952fdac",
+      "name": "Embeddings Google Gemini",
+      "type": "@n8n/n8n-nodes-langchain.embeddingsGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        80,
+        1088
+      ],
+      "credentials": {
+        "googlePalmApi": {
+          "id": null,
+          "name": "",
+          "__aiGatewayManaged": true
+        }
+      }
+    },
+    {
+      "parameters": {
+        "dataType": "binary",
+        "textSplittingMode": "custom",
+        "options": {}
+      },
+      "id": "27f438e9-6641-4a7c-9462-34bd051d8f7d",
+      "name": "Default Data Loader",
+      "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
+      "typeVersion": 1.1,
+      "position": [
+        368,
+        1056
+      ]
+    },
+    {
+      "parameters": {
+        "chunkSize": 400,
+        "chunkOverlap": 40
+      },
+      "id": "564bc100-c11f-4099-bdc8-64c4c7f77f92",
+      "name": "Token Splitter",
+      "type": "@n8n/n8n-nodes-langchain.textSplitterTokenSplitter",
+      "typeVersion": 1,
+      "position": [
+        576,
+        1200
+      ]
+    },
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.5,
+      "position": [
+        -96,
+        0
+      ],
+      "id": "ff9fc437-f17d-4dd2-be24-e2d3cfb3a7ea",
+      "name": "Telegram Trigger",
+      "webhookId": "e10a65dc-6c01-4bf7-b24d-928610404387",
+      "credentials": {
+        "telegramApi": {
+          "id": "vxxZyU8v4GvuHyp1",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $node[\"Telegram Trigger\"].json.message.chat.id }}",
+        "text": "={{ $json.output }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        688,
+        0
+      ],
+      "id": "0757f12a-b008-49a9-acb3-32f0ab2cb6cf",
+      "name": "Send a text message",
+      "webhookId": "6d7a9c50-cd31-4c2b-aa7d-d2c447c8eb34",
+      "credentials": {
+        "telegramApi": {
+          "id": "vxxZyU8v4GvuHyp1",
+          "name": "Telegram account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Vector Store1": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings Google Gemini1": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Simple Vector Store1",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tavily MCP": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet in Google Sheets": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create an event in Google Calendar": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "send_confirmation_email": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Drive Trigger": {
+      "main": [
+        [
+          {
+            "node": "Download file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download file": {
+      "main": [
+        [
+          {
+            "node": "Simple Vector Store",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings Google Gemini": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Simple Vector Store",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Default Data Loader": {
+      "ai_document": [
+        [
+          {
+            "node": "Simple Vector Store",
+            "type": "ai_document",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Token Splitter": {
+      "ai_textSplitter": [
+        [
+          {
+            "node": "Default Data Loader",
+            "type": "ai_textSplitter",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "timeSavedMode": "fixed",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": true,
+    "executionTimeout": -1,
+    "redactCallerExecutions": true
+  },
+  "versionId": "137b2c93-b3b0-445a-8433-807926d38662",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "da6a499ea5ea6ba961a7aea65f6358d319c35a8f5edeacd3ffa0a579de0cf2ea"
+  },
+  "nodeGroups": [],
+  "id": "lvFOZaGVuRv5VfpS",
+  "tags": []
+}
